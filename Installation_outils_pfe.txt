@@ -1,0 +1,70 @@
+#####Prerequisites#####
+apt-get install net-tools
+apt-get install curl
+
+#####Azure cli#####
+AZ_REPO=$(lsb_release -cs)
+echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+sudo apt-get install apt-transport-https
+sudo apt-get update && sudo apt-get install azure-cli
+
+
+######Terraform######
+curl https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_linux_amd64.zip -o terraform_0.11.11_linux_amd64.zip
+unzip terraform_0.11.11_linux_amd64.zip
+mv terraform /usr/local/bin/
+
+
+######Packer######
+wget https://releases.hashicorp.com/packer/1.3.2/packer_1.3.2_linux_amd64.zip
+unzip packer_1.3.2_linux_amd64.zip -d packer
+mv packer /usr/local/
+##export PATH="$PATH:/usr/local/packer" ---> /etc/environment
+source /etc/environment 
+
+
+######Jenkins######
+apt-get install openjdk-8-jdk
+wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+apt-get update
+apt-get install jenkins
+ufw allow 8080
+##http://your_ip_or_domain:8080 ---> Web Configuration (in a Browser)
+##cat /var/lib/jenkins/secrets/initialAdminPassword ---> Initial Jenkins Password
+
+
+######Ansible######
+apt-get update
+apt-get install software-properties-common
+apt-add-repository --yes --update ppa:ansible/ansible
+apt-get install ansible
+
+
+######Dokcer and Kubernetes######
+apt-get install docker.io
+systemctl enable docker
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+apt-get install kubeadm
+
+
+######Elasticsearch et Kibana######
+sudo apt install openjdk-8-jre apt-transport-https wget nginx
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" >/etc/apt/sources.list.d/elastic.list
+apt-get update
+sudo apt install elasticsearch kibana
+##nano /etc/kibana/kibana.yml and Uncomment the ligne << server.host: "localhost" >>
+systemctl restart kibana
+systemctl start elasticsearch
+echo "adminkibana:`openssl passwd -apr1 AdminKibana2018`" | sudo tee -a /etc/nginx/htpasswd.kibana ----> adminkibana is the login, AdminKibana2018 is the password.
+nano /etc/nginx/sites-available/kibana ---> Edite the file according to thr instructions of the site : https://linuxconfig.org/install-elk-on-ubuntu-18-04-bionic-beaver-linux
+rm /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/kibana /etc/nginx/sites-enabled/kibana
+systemctl restart nginx
+
+######Logstash######
+sudo apt install logstash
+##Register in Kibana via a web Browser
